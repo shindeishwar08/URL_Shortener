@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import com.codesensei.url_shortener.dto.UrlRequestDto;
 import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.entity.Url;
+import com.codesensei.url_shortener.exception.UrlNotFoundException;
 import com.codesensei.url_shortener.repository.UrlRepository;
+
+
 
 @Service
 public class UrlService {
@@ -40,7 +43,7 @@ public class UrlService {
         urlRepository.save(url);
 
         UrlResponseDto response = new UrlResponseDto();
-        response.setShortUrl("http://localhost:8080/" + shortCode);
+        response.setShortUrl("http://localhost:8080/api/v1" + shortCode);
         
         return response;
         // TODO Auto-generated method stub
@@ -55,6 +58,13 @@ public class UrlService {
             sb.append(CHARACTERS.charAt(randomIndex));
         }
         return sb.toString();
+    }
+
+    public String getOriginalUrl(String shortCode){
+        Url url = urlRepository.findByShortCode(shortCode).orElseThrow(() -> new UrlNotFoundException("URL not found for code: " +shortCode));
+    
+        return url.getLongUrl();
+
     }
 
     
