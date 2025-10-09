@@ -50,7 +50,7 @@ public class UrlService {
         // throw new UnsupportedOperationException("Unimplemented method 'createShortUrl'");
     }
     
-    //Base Logic
+    //ShortCode Logic(Part1)
     public String generateShortCode() {
         StringBuilder sb = new StringBuilder(CODE_LENGTH);
         for (int i = 0; i < CODE_LENGTH; i++) {
