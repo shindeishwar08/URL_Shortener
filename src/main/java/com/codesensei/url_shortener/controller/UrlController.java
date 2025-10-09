@@ -15,6 +15,8 @@ import com.codesensei.url_shortener.dto.UrlRequestDto;
 import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.service.UrlService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/v1")
 public class UrlController {
@@ -32,8 +34,8 @@ public class UrlController {
     }
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode){
-        String originalUrl = urlService.getOriginalUrl(shortCode);
+    public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode, HttpServletRequest request){
+        String originalUrl = urlService.getOriginalUrl(shortCode, request);
 
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(originalUrl)).build();
 

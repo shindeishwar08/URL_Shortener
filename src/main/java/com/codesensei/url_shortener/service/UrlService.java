@@ -8,8 +8,12 @@ import org.springframework.stereotype.Service;
 import com.codesensei.url_shortener.dto.UrlRequestDto;
 import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.entity.Url;
+import com.codesensei.url_shortener.entity.UrlAnalytics;
 import com.codesensei.url_shortener.exception.UrlNotFoundException;
+import com.codesensei.url_shortener.repository.UrlAnalyticsRepository;
 import com.codesensei.url_shortener.repository.UrlRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 
 
@@ -23,9 +27,11 @@ public class UrlService {
     
     //Dependency for Repositiry Layer
     private final UrlRepository urlRepository;
+    private final UrlAnalyticsRepository urlAnalyticsRepository;
 
-    public UrlService(UrlRepository urlRepository){
+    public UrlService(UrlRepository urlRepository, UrlAnalyticsRepository urlAnalyticsRepository){
         this.urlRepository=urlRepository;
+        this.urlAnalyticsRepository=urlAnalyticsRepository;
     }
 
 
@@ -60,11 +66,19 @@ public class UrlService {
         return sb.toString();
     }
 
-    public String getOriginalUrl(String shortCode){
+    public String getOriginalUrl(String shortCode, HttpServletRequest request){
         Url url = urlRepository.findByShortCode(shortCode).orElseThrow(() -> new UrlNotFoundException("URL not found for code: " +shortCode));
     
+        
+        //analytics set and store
+        UrlAnalytics analytics = new UrlAnalytics();
+        analytics.setClickedAt(LocalDateTime.now());
+        analytics.setIpAddress(request.getRemoteAddr());
+        analytics.setUserAgent(request.getHeader("User-Agent"));
+        analytics.setUrl(url);
+        urlAnalyticsRepository.save(analytics);
+        
         return url.getLongUrl();
-
     }
 
     
