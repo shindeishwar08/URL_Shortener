@@ -9,6 +9,7 @@ import com.codesensei.url_shortener.dto.UrlRequestDto;
 import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.entity.Url;
 import com.codesensei.url_shortener.entity.UrlAnalytics;
+import com.codesensei.url_shortener.exception.AliasAlreadyExistsException;
 import com.codesensei.url_shortener.exception.UrlExpiredException;
 import com.codesensei.url_shortener.exception.UrlNotFoundException;
 import com.codesensei.url_shortener.repository.UrlAnalyticsRepository;
@@ -38,7 +39,21 @@ public class UrlService {
 
     public UrlResponseDto createShortUrl(UrlRequestDto request) {
 
-        String shortCode = generateShortCode();
+        String shortCode;
+
+        if(request.getAlias()!=null && !request.getAlias().isBlank()){
+            boolean aliasExists = urlRepository.existsByShortCode(request.getAlias());
+
+            if(aliasExists){
+                throw new AliasAlreadyExistsException("Alias is already in use");
+            }
+
+            shortCode = request.getAlias();
+        }else{
+            
+            shortCode = generateShortCode();
+        }
+
 
         //New Url Entity object and set its properties
         Url url = new Url();
@@ -56,8 +71,7 @@ public class UrlService {
         response.setShortUrl("http://localhost:8080/api/v1/" + shortCode);
         
         return response;
-        // TODO Auto-generated method stub
-        // throw new UnsupportedOperationException("Unimplemented method 'createShortUrl'");
+    
     }
     
     //ShortCode Logic(Part1)

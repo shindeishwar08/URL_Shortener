@@ -16,6 +16,7 @@ import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.service.UrlService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,7 +29,7 @@ public class UrlController {
     }
     
     @PostMapping("/url")
-    public ResponseEntity<UrlResponseDto> createShortUrl(@RequestBody UrlRequestDto request){
+    public ResponseEntity<UrlResponseDto> createShortUrl(@Valid @RequestBody UrlRequestDto request){
         UrlResponseDto response = urlService.createShortUrl(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
