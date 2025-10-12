@@ -78,28 +78,46 @@ Creates a new short URL. A custom alias and an expiry date are optional.
   "alias": "my-search",
   "expiresAt": "2026-12-31T23:59:59"
 }
+````
 
-Success Response (JSON)
-Example Response:
+#### Success Response (JSON)
 
-JSON
+**Example Response:**
+
+```json
 {
   "shortUrl": "http://localhost:8080/api/v1/my-search"
 }
-2. Redirect to Original URL
+```
+
+-----
+
+### 2\. Redirect to Original URL
+
 Redirects a short URL to its original long URL and records the click for analytics.
-Method: GET
-Endpoint: /api/v1/{shortCode}
 
-Success Response: 302 Found (Redirect)
+  - **Method:** `GET`
+  - **Endpoint:** `/api/v1/{shortCode}`
+  - **Success Response:** `302 Found` (Redirect)
 
-Parameter	Description
-shortCode	The short code or custom alias.
+#### Path Parameters
 
-Response Details
-If the shortCode is valid and not expired, the server returns an empty response with a 302 Found status code and a Location header pointing to the original long URL. If the shortCode does not exist, it returns a 404 Not Found error. If the link has expired, it returns a 410 Gone error.
+| Parameter   | Description                        |
+| :---------- | :--------------------------------- |
+| `shortCode` | The short code or custom alias.    |
 
-🔮 Future Enhancements
-Implement a global exception handler for consistent JSON error responses.
-Add robust IP address resolution using the X-Forwarded-For header for production environments.
-Introduce a do-while loop for random code generation to guarantee uniqueness in high-traffic scenarios.
+#### Response Details
+
+If the `shortCode` is valid and not expired, the server returns an empty response with a `302 Found` status code and a `Location` header pointing to the original long URL. If the `shortCode` does not exist, it returns a `404 Not Found` error. If the link has expired, it returns a `410 Gone` error.
+
+-----
+
+## 🔮 Future Enhancements
+
+  - Implement a global exception handler for consistent JSON error responses.
+  - Add robust IP address resolution using the `X-Forwarded-For` header for production environments.
+  - Introduce a `do-while` loop for random code generation to guarantee uniqueness in high-traffic scenarios.
+
+
+```
+```
