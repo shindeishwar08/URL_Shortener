@@ -9,6 +9,7 @@ import com.codesensei.url_shortener.dto.UrlRequestDto;
 import com.codesensei.url_shortener.dto.UrlResponseDto;
 import com.codesensei.url_shortener.entity.Url;
 import com.codesensei.url_shortener.entity.UrlAnalytics;
+import com.codesensei.url_shortener.exception.UrlExpiredException;
 import com.codesensei.url_shortener.exception.UrlNotFoundException;
 import com.codesensei.url_shortener.repository.UrlAnalyticsRepository;
 import com.codesensei.url_shortener.repository.UrlRepository;
@@ -45,11 +46,14 @@ public class UrlService {
         url.setShortCode(shortCode);
         url.setCreatedAt(LocalDateTime.now());
 
+        if(request.getExpiresAt()!=null){
+            url.setExpiresAt(request.getExpiresAt());
+        }
         //Save new entity to db using repo layer
         urlRepository.save(url);
 
         UrlResponseDto response = new UrlResponseDto();
-        response.setShortUrl("http://localhost:8080/api/v1" + shortCode);
+        response.setShortUrl("http://localhost:8080/api/v1/" + shortCode);
         
         return response;
         // TODO Auto-generated method stub
@@ -68,7 +72,9 @@ public class UrlService {
 
     public String getOriginalUrl(String shortCode, HttpServletRequest request){
         Url url = urlRepository.findByShortCode(shortCode).orElseThrow(() -> new UrlNotFoundException("URL not found for code: " +shortCode));
-    
+        if(url.getExpiresAt()!=null && url.getExpiresAt().isBefore(LocalDateTime.now())){
+            throw new UrlExpiredException("This short-link has Expired!");
+        }
         
         //analytics set and store
         UrlAnalytics analytics = new UrlAnalytics();
