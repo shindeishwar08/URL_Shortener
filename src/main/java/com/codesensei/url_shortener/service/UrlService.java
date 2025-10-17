@@ -50,8 +50,10 @@ public class UrlService {
 
             shortCode = request.getAlias();
         }else{
-            
-            shortCode = generateShortCode();
+            //Robust mechanism to check even 1 in trillion case of failure.
+            do { 
+                shortCode = generateShortCode();
+            } while (urlRepository.existsByShortCode(shortCode));
         }
 
 
@@ -90,10 +92,16 @@ public class UrlService {
             throw new UrlExpiredException("This short-link has Expired!");
         }
         
+        //GET Client IP Address 
+        String ipAddress= request.getHeader("X-Forwarded-For");
+        if(ipAddress==null || ipAddress.isEmpty()){
+            ipAddress= request.getRemoteAddr();
+        }
+
         //analytics set and store
         UrlAnalytics analytics = new UrlAnalytics();
         analytics.setClickedAt(LocalDateTime.now());
-        analytics.setIpAddress(request.getRemoteAddr());
+        analytics.setIpAddress(ipAddress);
         analytics.setUserAgent(request.getHeader("User-Agent"));
         analytics.setUrl(url);
         urlAnalyticsRepository.save(analytics);

@@ -74,7 +74,7 @@ Creates a new short URL. A custom alias and an expiry date are optional.
 
 ```json
 {
-  "longUrl": "[https://www.google.com/search?q=backend+development](https://www.google.com/search?q=backend+development)",
+  "longUrl": "https://www.google.com/search?q=backend+development",
   "alias": "my-search",
   "expiresAt": "2026-12-31T23:59:59"
 }
@@ -116,8 +116,4 @@ If the `shortCode` is valid and not expired, the server returns an empty respons
 
   - Implement a global exception handler for consistent JSON error responses.
   - Add robust IP address resolution using the `X-Forwarded-For` header for production environments.
-  - Introduce a `do-while` loop for random code generation to guarantee uniqueness in high-traffic scenarios.
-
-
-```
-```
+  - Enhance the random code generation process to ensure true uniqueness and randomness, even in high-traffic environments.
