@@ -17,8 +17,6 @@ import com.codesensei.url_shortener.repository.UrlRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-
-
 @Service
 public class UrlService {
 
@@ -26,57 +24,59 @@ public class UrlService {
     private static final int CODE_LENGTH = 7;
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    
-    //Dependency for Repositiry Layer
+    // Dependency for Repositiry Layer
     private final UrlRepository urlRepository;
     private final UrlAnalyticsRepository urlAnalyticsRepository;
 
-    public UrlService(UrlRepository urlRepository, UrlAnalyticsRepository urlAnalyticsRepository){
-        this.urlRepository=urlRepository;
-        this.urlAnalyticsRepository=urlAnalyticsRepository;
+    public UrlService(UrlRepository urlRepository, UrlAnalyticsRepository urlAnalyticsRepository) {
+        this.urlRepository = urlRepository;
+        this.urlAnalyticsRepository = urlAnalyticsRepository;
     }
 
-
-    public UrlResponseDto createShortUrl(UrlRequestDto request) {
+    public UrlResponseDto createShortUrl(UrlRequestDto request, HttpServletRequest httpRequest ) {
 
         String shortCode;
 
-        if(request.getAlias()!=null && !request.getAlias().isBlank()){
+        if (request.getAlias() != null && !request.getAlias().isBlank()) {
             boolean aliasExists = urlRepository.existsByShortCode(request.getAlias());
 
-            if(aliasExists){
+            if (aliasExists) {
                 throw new AliasAlreadyExistsException("Alias is already in use");
             }
 
             shortCode = request.getAlias();
-        }else{
-            //Robust mechanism to check even 1 in trillion case of failure.
-            do { 
+        } else {
+            // Robust mechanism to check even 1 in trillion case of failure.
+            do {
                 shortCode = generateShortCode();
             } while (urlRepository.existsByShortCode(shortCode));
         }
 
-
-        //New Url Entity object and set its properties
+        // New Url Entity object and set its properties
         Url url = new Url();
         url.setLongUrl(request.getLongUrl());
         url.setShortCode(shortCode);
         url.setCreatedAt(LocalDateTime.now());
 
-        if(request.getExpiresAt()!=null){
+        if (request.getExpiresAt() != null) {
             url.setExpiresAt(request.getExpiresAt());
         }
-        //Save new entity to db using repo layer
+        // Save new entity to db using repo layer
         urlRepository.save(url);
 
-        UrlResponseDto response = new UrlResponseDto();
-        response.setShortUrl("http://localhost:8080/api/v1/" + shortCode);
+        // response.setShortUrl("http://localhost:8080/api/v1/" + shortCode);
         
+        String requestUrl = httpRequest.getRequestURL().toString();
+        String baseUrl = requestUrl.replace(httpRequest.getRequestURI(), httpRequest.getContextPath());
+        
+        UrlResponseDto response = new UrlResponseDto();
+        response.setShortUrl(baseUrl + "/api/v1/" + shortCode);
+
         return response;
-    
+
     }
-    
-    //ShortCode Logic(Part1)
+
+    // ShortCode Logic(Part1)
     public String generateShortCode() {
         StringBuilder sb = new StringBuilder(CODE_LENGTH);
         for (int i = 0; i < CODE_LENGTH; i++) {
@@ -86,28 +86,28 @@ public class UrlService {
         return sb.toString();
     }
 
-    public String getOriginalUrl(String shortCode, HttpServletRequest request){
-        Url url = urlRepository.findByShortCode(shortCode).orElseThrow(() -> new UrlNotFoundException("URL not found for code: " +shortCode));
-        if(url.getExpiresAt()!=null && url.getExpiresAt().isBefore(LocalDateTime.now())){
+    public String getOriginalUrl(String shortCode, HttpServletRequest request) {
+        Url url = urlRepository.findByShortCode(shortCode)
+                .orElseThrow(() -> new UrlNotFoundException("URL not found for code: " + shortCode));
+        if (url.getExpiresAt() != null && url.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new UrlExpiredException("This short-link has Expired!");
         }
-        
-        //GET Client IP Address 
-        String ipAddress= request.getHeader("X-Forwarded-For");
-        if(ipAddress==null || ipAddress.isEmpty()){
-            ipAddress= request.getRemoteAddr();
+
+        // GET Client IP Address
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getRemoteAddr();
         }
 
-        //analytics set and store
+        // analytics set and store
         UrlAnalytics analytics = new UrlAnalytics();
         analytics.setClickedAt(LocalDateTime.now());
         analytics.setIpAddress(ipAddress);
         analytics.setUserAgent(request.getHeader("User-Agent"));
         analytics.setUrl(url);
         urlAnalyticsRepository.save(analytics);
-        
+
         return url.getLongUrl();
     }
 
-    
 }
